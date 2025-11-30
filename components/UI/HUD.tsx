@@ -145,7 +145,7 @@ export const HUD: React.FC = () => {
                         </button>
 
                         <p className="text-cyan-400/60 text-[10px] md:text-xs font-mono mt-3 tracking-wider">
-                            [ ARROWS / SWIPE TO MOVE ]
+                            [ WASD / ARROWS / SWIPE TO MOVE ]
                         </p>
                      </div>
                 </div>

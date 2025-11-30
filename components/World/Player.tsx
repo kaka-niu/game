@@ -112,9 +112,21 @@ export const Player: React.FC = () => {
       if (status !== GameStatus.PLAYING) return;
       const maxLane = Math.floor(laneCount / 2);
 
-      if (e.key === 'ArrowLeft') setLane(l => Math.max(l - 1, -maxLane));
-      else if (e.key === 'ArrowRight') setLane(l => Math.min(l + 1, maxLane));
-      else if (e.key === 'ArrowUp' || e.key === 'w') triggerJump();
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+          setLane(l => Math.max(l - 1, -maxLane));
+      }
+      else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+          setLane(l => Math.min(l + 1, maxLane));
+      }
+      else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+          triggerJump();
+      }
+      else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+          // Fast drop if in air (improves controls responsiveness)
+          if (isJumping.current) {
+              velocityY.current = -40; 
+          }
+      }
       else if (e.key === ' ' || e.key === 'Enter') {
           activateImmortality();
       }
@@ -142,6 +154,11 @@ export const Player: React.FC = () => {
              else setLane(l => Math.max(l - 1, -maxLane));
         } else if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY < -30) {
             triggerJump();
+        } else if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 30) {
+             // Swipe Down - Fast Drop
+             if (isJumping.current) {
+                 velocityY.current = -40;
+             }
         } else if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) {
             activateImmortality();
         }
