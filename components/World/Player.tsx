@@ -112,22 +112,28 @@ export const Player: React.FC = () => {
       if (status !== GameStatus.PLAYING) return;
       const maxLane = Math.floor(laneCount / 2);
 
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      const isLeft = e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A';
+      const isRight = e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D';
+      const isJump = e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W';
+      const isDown = e.key === 'ArrowDown' || e.key === 's' || e.key === 'S';
+      const isAction = e.key === ' ' || e.key === 'Enter';
+
+      if (isLeft) {
           setLane(l => Math.max(l - 1, -maxLane));
       }
-      else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      else if (isRight) {
           setLane(l => Math.min(l + 1, maxLane));
       }
-      else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      else if (isJump) {
           triggerJump();
       }
-      else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+      else if (isDown) {
           // Fast drop if in air (improves controls responsiveness)
           if (isJumping.current) {
               velocityY.current = -40; 
           }
       }
-      else if (e.key === ' ' || e.key === 'Enter') {
+      else if (isAction) {
           activateImmortality();
       }
     };
@@ -289,7 +295,7 @@ export const Player: React.FC = () => {
       <group ref={bodyRef} position={[0, 1.1, 0]}> 
         
         {/* Torso */}
-        <mesh castShadow position={[0, 0.2, 0]} geometry={TORSO_GEO} material={armorMaterial} />
+        <mesh position={[0, 0.2, 0]} geometry={TORSO_GEO} material={armorMaterial} />
 
         {/* Jetpack */}
         <mesh position={[0, 0.2, -0.2]} geometry={JETPACK_GEO} material={jointMaterial} />
@@ -298,19 +304,19 @@ export const Player: React.FC = () => {
 
         {/* Head */}
         <group ref={headRef} position={[0, 0.6, 0]}>
-            <mesh castShadow geometry={HEAD_GEO} material={armorMaterial} />
+            <mesh geometry={HEAD_GEO} material={armorMaterial} />
         </group>
 
         {/* Arms */}
         <group position={[0.32, 0.4, 0]}>
             <group ref={rightArmRef}>
-                <mesh position={[0, -0.25, 0]} castShadow geometry={ARM_GEO} material={armorMaterial} />
+                <mesh position={[0, -0.25, 0]} geometry={ARM_GEO} material={armorMaterial} />
                 <mesh position={[0, -0.55, 0]} geometry={JOINT_SPHERE_GEO} material={glowMaterial} />
             </group>
         </group>
         <group position={[-0.32, 0.4, 0]}>
             <group ref={leftArmRef}>
-                 <mesh position={[0, -0.25, 0]} castShadow geometry={ARM_GEO} material={armorMaterial} />
+                 <mesh position={[0, -0.25, 0]} geometry={ARM_GEO} material={armorMaterial} />
                  <mesh position={[0, -0.55, 0]} geometry={JOINT_SPHERE_GEO} material={glowMaterial} />
             </group>
         </group>
@@ -321,12 +327,12 @@ export const Player: React.FC = () => {
         {/* Legs */}
         <group position={[0.12, -0.25, 0]}>
             <group ref={rightLegRef}>
-                 <mesh position={[0, -0.35, 0]} castShadow geometry={LEG_GEO} material={armorMaterial} />
+                 <mesh position={[0, -0.35, 0]} geometry={LEG_GEO} material={armorMaterial} />
             </group>
         </group>
         <group position={[-0.12, -0.25, 0]}>
             <group ref={leftLegRef}>
-                 <mesh position={[0, -0.35, 0]} castShadow geometry={LEG_GEO} material={armorMaterial} />
+                 <mesh position={[0, -0.35, 0]} geometry={LEG_GEO} material={armorMaterial} />
             </group>
         </group>
       </group>

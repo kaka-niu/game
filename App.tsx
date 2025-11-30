@@ -72,7 +72,6 @@ function App() {
     <div className="relative w-full h-screen bg-black overflow-hidden select-none">
       <HUD />
       <Canvas
-        shadows
         dpr={[1, 1.5]} 
         gl={{ antialias: false, stencil: false, depth: true, powerPreference: "high-performance" }}
         // Initial camera, matches the controller base

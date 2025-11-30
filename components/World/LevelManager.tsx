@@ -179,6 +179,9 @@ export const LevelManager: React.FC = () => {
   const distanceTraveled = useRef(0);
   const nextLetterDistance = useRef(BASE_LETTER_INTERVAL);
 
+  // Reuse vector to avoid garbage collection
+  const playerPos = useMemo(() => new THREE.Vector3(), []);
+
   // Handle resets and transitions
   useEffect(() => {
     const isRestart = status === GameStatus.PLAYING && prevStatus.current === GameStatus.GAME_OVER;
@@ -241,7 +244,6 @@ export const LevelManager: React.FC = () => {
     distanceTraveled.current += dist;
 
     let hasChanges = false;
-    let playerPos = new THREE.Vector3(0, 0, 0);
     
     if (playerObjRef.current) {
         playerObjRef.current.getWorldPosition(playerPos);
@@ -652,7 +654,7 @@ const GameEntity: React.FC<{ data: GameObject }> = React.memo(({ data }) => {
                 {/* --- OBSTACLE --- */}
                 {data.type === ObjectType.OBSTACLE && (
                     <group>
-                        <mesh geometry={OBSTACLE_GEOMETRY} castShadow receiveShadow>
+                        <mesh geometry={OBSTACLE_GEOMETRY}>
                              <meshStandardMaterial 
                                  color="#330011"
                                  roughness={0.3} 
@@ -678,7 +680,7 @@ const GameEntity: React.FC<{ data: GameObject }> = React.memo(({ data }) => {
                 {data.type === ObjectType.ALIEN && (
                     <group>
                         {/* Saucer Body */}
-                        <mesh castShadow geometry={ALIEN_BODY_GEO}>
+                        <mesh geometry={ALIEN_BODY_GEO}>
                             <meshStandardMaterial color="#4400cc" metalness={0.8} roughness={0.2} />
                         </mesh>
                         {/* Dome */}
@@ -717,7 +719,7 @@ const GameEntity: React.FC<{ data: GameObject }> = React.memo(({ data }) => {
 
                 {/* --- GEM --- */}
                 {data.type === ObjectType.GEM && (
-                    <mesh castShadow geometry={GEM_GEOMETRY}>
+                    <mesh geometry={GEM_GEOMETRY}>
                         <meshStandardMaterial 
                             color={data.color} 
                             roughness={0} 
