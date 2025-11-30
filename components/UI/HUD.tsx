@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -119,35 +120,42 @@ export const HUD: React.FC = () => {
       return (
           <div className="absolute inset-0 flex items-center justify-center z-[100] bg-black/80 backdrop-blur-sm p-4 pointer-events-auto">
               {/* Card Container */}
-              <div className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,255,255,0.2)] border border-white/10 animate-in zoom-in-95 duration-500">
+              <div className="relative w-full max-w-md bg-gray-900 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(0,255,255,0.2)] border border-white/10 animate-in zoom-in-95 duration-500">
                 
-                {/* Image Container - Auto height to fit full image without cropping */}
-                <div className="relative w-full bg-gray-900">
-                     <img 
-                      src="https://www.gstatic.com/aistudio/starter-apps/gemini_runner/gemini_runner.png" 
-                      alt="Gemini Runner Cover" 
-                      className="w-full h-auto block"
-                     />
+                {/* CSS Based Graphic to replace external image */}
+                <div className="w-full h-64 md:h-80 bg-gradient-to-br from-[#050011] via-[#1a0b2e] to-[#2d004d] relative overflow-hidden flex items-center justify-center">
+                    {/* Decorative Grid */}
+                    <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(transparent 95%, rgba(0, 255, 255, 0.2) 95%), linear-gradient(90deg, transparent 95%, rgba(0, 255, 255, 0.2) 95%)', backgroundSize: '40px 40px' }}></div>
+                    
+                    {/* Sun */}
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-t from-pink-600 to-yellow-400 absolute bottom-10 drop-shadow-[0_0_30px_rgba(255,0,128,0.5)]"></div>
+                    
+                    {/* Title Text */}
+                    <div className="relative z-10 text-center">
+                        <h1 className="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 font-cyber drop-shadow-[0_0_10px_rgba(0,255,255,0.5)] transform -skew-x-12">
+                            GEMINI
+                        </h1>
+                        <h2 className="text-3xl md:text-4xl font-bold text-white font-cyber tracking-[0.2em] transform -skew-x-12 mt-2">
+                            RUNNER
+                        </h2>
+                    </div>
+                </div>
                      
-                     {/* Gradient Overlay for text readability */}
-                     <div className="absolute inset-0 bg-gradient-to-t from-[#050011] via-black/30 to-transparent"></div>
-                     
-                     {/* Content positioned at the bottom of the card */}
-                     <div className="absolute inset-0 flex flex-col justify-end items-center p-6 pb-8 text-center z-10">
-                        <button 
-                          onClick={() => { audio.init(); startGame(); }}
-                          className="w-full group relative px-6 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-black text-xl rounded-xl hover:bg-white/20 transition-all shadow-[0_0_20px_rgba(0,255,255,0.2)] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:border-cyan-400 overflow-hidden"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/40 via-purple-500/40 to-pink-500/40 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                            <span className="relative z-10 tracking-widest flex items-center justify-center">
-                                INITIALIZE RUN <Play className="ml-2 w-5 h-5 fill-white" />
-                            </span>
-                        </button>
+                {/* Content */}
+                <div className="flex flex-col justify-end items-center p-6 pb-8 text-center z-10 bg-gray-900 border-t border-white/10">
+                    <button 
+                        onClick={() => { audio.init(); startGame(); }}
+                        className="w-full group relative px-6 py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white font-black text-xl rounded-xl hover:bg-white/20 transition-all shadow-[0_0_20px_rgba(0,255,255,0.2)] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] hover:border-cyan-400 overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/40 via-purple-500/40 to-pink-500/40 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                        <span className="relative z-10 tracking-widest flex items-center justify-center">
+                            INITIALIZE RUN <Play className="ml-2 w-5 h-5 fill-white" />
+                        </span>
+                    </button>
 
-                        <p className="text-cyan-400/60 text-[10px] md:text-xs font-mono mt-3 tracking-wider">
-                            [ WASD / ARROWS / SWIPE TO MOVE ]
-                        </p>
-                     </div>
+                    <p className="text-cyan-400/60 text-[10px] md:text-xs font-mono mt-3 tracking-wider">
+                        [ WASD / ARROWS / SWIPE TO MOVE ]
+                    </p>
                 </div>
               </div>
           </div>

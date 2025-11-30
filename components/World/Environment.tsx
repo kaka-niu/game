@@ -10,68 +10,46 @@ import * as THREE from 'three';
 import { useStore } from '../../store';
 import { LANE_WIDTH } from '../../types';
 
+// Optimized GPU Starfield
 const StarField: React.FC = () => {
   const speed = useStore(state => state.speed);
-  const count = 3000; // Increased star count for better density
-  const meshRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  
+  const count = 4000;
   
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      let x = (Math.random() - 0.5) * 400;
-      let y = (Math.random() - 0.5) * 200 + 50; // Keep mostly above horizon
-      
-      // Distribute Z randomly along the entire travel path plus buffer
-      // Range: -550 to 100 to ensure full coverage from start
-      let z = -550 + Math.random() * 650;
-
-      // Exclude stars from the central play area
-      if (Math.abs(x) < 15 && y > -5 && y < 20) {
-          if (x < 0) x -= 15;
-          else x += 15;
-      }
-
-      pos[i * 3] = x;     
-      pos[i * 3 + 1] = y; 
-      pos[i * 3 + 2] = z; 
+      pos[i * 3] = (Math.random() - 0.5) * 600;     // X
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 400; // Y
+      pos[i * 3 + 2] = -Math.random() * 600;        // Z
     }
     return pos;
   }, []);
 
+  // Random offsets for size variation
+  const randoms = useMemo(() => {
+      const r = new Float32Array(count);
+      for(let i=0; i<count; i++) r[i] = Math.random();
+      return r;
+  }, []);
+
   useFrame((state, delta) => {
-    if (!meshRef.current) return;
-    
-    const positions = meshRef.current.geometry.attributes.position.array as Float32Array;
-    const activeSpeed = speed > 0 ? speed : 2; // Always move slightly even when stopped
-
-    for (let i = 0; i < count; i++) {
-        let z = positions[i * 3 + 2];
-        z += activeSpeed * delta * 2.0; // Parallax effect
-        
-        // Reset when it passes the camera (z > 100 gives plenty of buffer behind camera)
-        if (z > 100) {
-            // Reset far back with a random buffer to prevent "walls" of stars
-            z = -550 - Math.random() * 50; 
-            
-            // Re-randomize X/Y on respawn with exclusion logic
-            let x = (Math.random() - 0.5) * 400;
-            let y = (Math.random() - 0.5) * 200 + 50;
-            
-            if (Math.abs(x) < 15 && y > -5 && y < 20) {
-                if (x < 0) x -= 15;
-                else x += 15;
-            }
-
-            positions[i * 3] = x;
-            positions[i * 3 + 1] = y;
-        }
-        positions[i * 3 + 2] = z;
+    if (materialRef.current) {
+        // Pass time and speed to shader to animate entirely on GPU
+        materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+        materialRef.current.uniforms.uSpeed.value = speed > 0 ? speed : 5.0;
     }
-    meshRef.current.geometry.attributes.position.needsUpdate = true;
   });
 
+  const uniforms = useMemo(() => ({
+      uTime: { value: 0 },
+      uSpeed: { value: 0 },
+      uColor: { value: new THREE.Color('#ffffff') }
+  }), []);
+
   return (
-    <points ref={meshRef}>
+    <points>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -79,13 +57,61 @@ const StarField: React.FC = () => {
           array={positions}
           itemSize={3}
         />
+         <bufferAttribute
+          attach="attributes-aRandom"
+          count={count}
+          array={randoms}
+          itemSize={1}
+        />
       </bufferGeometry>
-      <pointsMaterial
-        size={0.5}
-        color="#ffffff"
+      <shaderMaterial
+        ref={materialRef}
+        uniforms={uniforms}
         transparent
-        opacity={0.8}
-        sizeAttenuation
+        vertexShader={`
+            uniform float uTime;
+            uniform float uSpeed;
+            attribute float aRandom;
+            varying float vAlpha;
+            
+            void main() {
+                vec3 pos = position;
+                
+                // Animate Z
+                float zOffset = uTime * uSpeed;
+                pos.z += zOffset;
+                
+                // Loop Z within range -600 to 100
+                // We use mod with a large range
+                float range = 700.0;
+                pos.z = mod(pos.z, range) - 600.0;
+                
+                // Avoid tunnel vision: Push stars away from center path
+                if (abs(pos.x) < 20.0 && pos.y > -10.0 && pos.y < 30.0) {
+                     pos.y += 50.0;
+                }
+
+                vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                gl_Position = projectionMatrix * mvPosition;
+                gl_PointSize = (400.0 / -mvPosition.z) * (0.5 + aRandom);
+                
+                // Fade out distant stars
+                vAlpha = smoothstep(-600.0, -400.0, pos.z) * (0.5 + aRandom * 0.5);
+            }
+        `}
+        fragmentShader={`
+            uniform vec3 uColor;
+            varying float vAlpha;
+            
+            void main() {
+                // Circular particle
+                vec2 center = gl_PointCoord - 0.5;
+                float dist = length(center);
+                if (dist > 0.5) discard;
+                
+                gl_FragColor = vec4(uColor, vAlpha);
+            }
+        `}
       />
     </points>
   );
@@ -135,7 +161,6 @@ const RetroSun: React.FC = () => {
         if (matRef.current) {
             matRef.current.uniforms.uTime.value = state.clock.elapsedTime;
         }
-        // Gentle bobbing
         if (sunGroupRef.current) {
             sunGroupRef.current.position.y = 30 + Math.sin(state.clock.elapsedTime * 0.2) * 1.0;
             sunGroupRef.current.rotation.y = state.clock.elapsedTime * 0.05;
@@ -150,7 +175,6 @@ const RetroSun: React.FC = () => {
 
     return (
         <group ref={sunGroupRef} position={[0, 30, -180]}>
-            {/* Reduced Geometry for Mobile: 32 segments instead of 64 */}
             <mesh>
                 <sphereGeometry args={[35, 32, 32]} />
                 <shaderMaterial
@@ -159,7 +183,6 @@ const RetroSun: React.FC = () => {
                     transparent
                     vertexShader={`
                         varying vec2 vUv;
-
                         void main() {
                             vUv = uv;
                             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
@@ -172,24 +195,11 @@ const RetroSun: React.FC = () => {
                         uniform vec3 uColorBottom;
 
                         void main() {
-                            // 1. Basic Vertical Gradient
                             vec3 color = mix(uColorBottom, uColorTop, vUv.y);
-                            
-                            // 2. Synthwave Scanlines
-                            float stripeFreq = 40.0;
-                            float stripeSpeed = 1.0;
-                            // Simple scanline logic without heavy rim lighting
-                            float stripes = sin((vUv.y * stripeFreq) - (uTime * stripeSpeed));
-                            
-                            // Create sharp bands
+                            float stripes = sin((vUv.y * 40.0) - (uTime * 1.0));
                             float stripeMask = smoothstep(0.2, 0.3, stripes);
-                            
-                            // Fade scanlines out towards the top of the sun
                             float scanlineFade = smoothstep(0.7, 0.3, vUv.y); 
-                            
-                            // Apply dark bands (scanlines)
                             vec3 finalColor = mix(color, color * 0.1, (1.0 - stripeMask) * scanlineFade);
-
                             gl_FragColor = vec4(finalColor, 1.0);
                         }
                     `}
@@ -208,11 +218,7 @@ const MovingGrid: React.FC = () => {
         if (meshRef.current) {
              const activeSpeed = speed > 0 ? speed : 5;
              offsetRef.current += activeSpeed * delta;
-             
-             // Grid cell size = 400 (length) / 40 (segments) = 10 units
              const cellSize = 10;
-             
-             // Move mesh forward (+Z) to simulate travel, then snap back
              const zPos = -100 + (offsetRef.current % cellSize);
              meshRef.current.position.z = zPos;
         }
